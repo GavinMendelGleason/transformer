@@ -49,14 +49,3 @@ declarations(Program,Declarations) :-
             Declartion = declaration(_)),
         Declarations).
 
-/*
-
-cd swipl-devel
-mkdir build
-cd build
-cmake -DCMAKE_INSTALL_PREFIX=$HOME -G Ninja ..
-ninja
-ctest -j 4
-ninja install
-
-*/
