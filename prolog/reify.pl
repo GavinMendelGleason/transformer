@@ -63,6 +63,34 @@ test(reify_predicate_clause, []) :-
     reify_reflect(Term,Reflected),
     Reflected = clause(p/1,[Y],[Y=1]).
 
+test(reify_headless_clause, []) :-
+
+    Term = (p(_)),
+
+    reify_reflect(Term,Reflected),
+    Reflected = clause(p/1,[_],[]).
+
+test(reflect_headless_clause, []) :-
+
+    Clause = clause(p/1,[_],[]),
+
+    reify_reflect(Term,Clause),
+    Term = p(_).
+
+test(reflect_predicate_clause, []) :-
+
+    Clause = clause(p/1,[_],[q]),
+
+    reify_reflect(Term,Clause),
+    Term = (p(_):-q).
+
+test(reflect_declaration, []) :-
+
+    Clause = declaration([q]),
+
+    reify_reflect(Term,Clause),
+    Term = (:- q).
+
 test(predicate_clauses, []) :-
 
     Program = [clause(p/1,[x],[q]),
