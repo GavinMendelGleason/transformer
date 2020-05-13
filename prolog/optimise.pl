@@ -16,12 +16,25 @@ module_wants_guard(Module) :-
     Module \= optimise,
     predicate_property(Module:optimise(_), imported_from(optimise)).
 
-participating_predicates(Pred,Clauses) :-
-    member(declaration(optimise(Pred)), Clauses).
+participating_predicate(Pred,Program) :-
+    predicate_clauses(Program, Pred, _Clauses).
+
+get_program(Program) :-
+    bagof(Clause,
+          '$program'(Clause),
+          Program).
 
 transformed_clauses(Clauses) :-
-    participating_predicates(Pred,Clauses),
-    true.
+    get_program(Program),
+    findall(New_Clauses,
+            (   member(Clause, Program)
+            ->  (   predicate_clauses(Program, Pred, Predicate_Clauses) ->
+                    (   participating_predicates(Pred,Program)
+                    ->  optimise_clauses(Predicate_Clauses,New_Clauses)
+                    ;   Predicate_Clauses = New_Clauses)
+                ;   New_Clauses = Predicate_Clauses)
+            ;   New_Clauses = true % huh?
+            Clauses).
 
 
 user:term_expansion(begin_of_file, begin_of_file) :-
@@ -29,7 +42,6 @@ user:term_expansion(begin_of_file, begin_of_file) :-
     prolog_load_context(module, Module),
     optimise:module_wants_guard(Module),
     retractall(optimise:'$program'(_)),
-    retractall(optimise:'$participating_clause'(_)).
 user:term_expansion(end_of_file,Clauses) :-
     prolog_load_context(module, Module),
     optimise:module_wants_guard(Module),
