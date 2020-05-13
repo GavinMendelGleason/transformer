@@ -1,7 +1,7 @@
 :- module(reify, [
               reify_reflect/2,
-              bodyless_term/1,
-              predicate_clauses/3
+              predicate_clauses/3,
+              declarations/2
           ]).
 
 /*
@@ -20,15 +20,18 @@ xfy_list(_, Term, [Term]).
  * reify_reflect(-,+) is det.
  */
 reify_reflect((:- Body),declaration(Clauses)) :-
+    !,
     xfy_list(',', Body, Clauses).
 reify_reflect((Head --> Body),clause(P//N,Args,Clauses)) :-
     Head =.. [P|Args],
     length(Args,N),
-    xfy_list(',', Body, Clauses).
+    xfy_list(',', Body, Clauses),
+    !.
 reify_reflect((Head :- Body),clause(P/N,Args,Clauses)) :-
     Head =.. [P|Args],
     length(Args,N),
-    xfy_list(',', Body, Clauses).
+    xfy_list(',', Body, Clauses),
+    !.
 reify_reflect(Head,clause(P/N,Args,[])) :-
     Head =.. [P|Args],
     length(Args,N).
@@ -38,14 +41,52 @@ reify_reflect(Head,clause(P/N,Args,[])) :-
 predicate_clauses(Program,Pred,Clauses) :-
     bagof(
         Clause,
-        (   member(Clause,Clauses),
-            Clause = clause(Pred,_,_)),
+        Args^Body^(   member(Clause,Program),
+                      Clause = clause(Pred,Args,Body)),
         Clauses).
 
 declarations(Program,Declarations) :-
     bagof(
         Declaration,
-        (   member(Declartion,Program),
-            Declartion = declaration(_)),
+        (   member(Declaration,Program),
+            Declaration = declaration(_)),
         Declarations).
 
+:- use_module(library(plunit)).
+
+:- begin_tests(reify).
+
+test(reify_predicate_clause, []) :-
+
+    Term = (p(X) :- X = 1),
+
+    reify_reflect(Term,Reflected),
+    Reflected = clause(p/1,[Y],[Y=1]).
+
+test(predicate_clauses, []) :-
+
+    Program = [clause(p/1,[x],[q]),
+               clause(p/1,[y],[r]),
+               clause(q/0,[],[]),
+               clause(r/0,[],[])],
+
+    predicate_clauses(Program, p/1, P_Clauses),
+    P_Clauses  = [clause(p/1,[x],[q]),clause(p/1,[y],[r])],
+    predicate_clauses(Program, q/0, Q_Clauses),
+    Q_Clauses  = [clause(q/0,[],[])],
+    predicate_clauses(Program, r/0, R_Clauses),
+    R_Clauses  = [clause(r/0,[],[])].
+
+
+test(declaration_clauses, []) :-
+
+    Program = [declaration([module(q,[])]),
+               clause(p/1,[y],[r]),
+               clause(p/0,[],[]),
+               clause(p/1,[z],[s])],
+
+    declarations(Program, Decl),
+    Decl = [declaration([module(q,[])])].
+
+
+:- end_tests(reify).
