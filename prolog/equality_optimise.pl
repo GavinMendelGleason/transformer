@@ -7,14 +7,14 @@
 /*
  * Introduces a cut when subsequent clauses are impossible based on equality constraints.
  */
-arguments_equality_disjoint(_Args,[]).
-arguments_equality_disjoint(Args,[clause(_,Alt_Args,_)|Remainder]) :-
+equality_disjoint_arguments([],_Args).
+equality_disjoint_arguments([clause(_,Alt_Args,_)|Remainder],Args) :-
     \+ Args = Alt_Args,
-    arguments_equality_disjoint(Args,Remainder).
+    equality_disjoint_arguments(Remainder,Args).
 
 clauses_clause_transformed([],Clause,[Clause]).
 clauses_clause_transformed([First|Remainder],clause(Pred,Args,Body),[clause(Pred,Args,New_Body)|Clauses]) :-
-    (   arguments_equality_disjoint(Args,[First|Remainder])
+    (   equality_disjoint_arguments([First|Remainder],Args)
     ->  New_Body = [(!)|Body]
     ;   New_Body = Body),
     clauses_clause_transformed(Remainder,First,Clauses).
