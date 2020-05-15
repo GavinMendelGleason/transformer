@@ -9,6 +9,7 @@
 :- use_module(library(option)).
 
 :- dynamic '$program'/1.
+:- thread_local '$program'/1.
 :- dynamic '$participating_clause'/1.
 :- dynamic '$options'/1.
 
@@ -23,7 +24,7 @@ optimise(Predicate) :-
 optimise_all :-
     assertz('$participating_clause'(_)).
 
-module_wants_guard(Module) :-
+module_wants_optimise(Module) :-
     Module \= optimise,
     predicate_property(Module:optimise(_), imported_from(optimise)).
 
@@ -66,16 +67,16 @@ transformed_terms(Terms) :-
 user:term_expansion(begin_of_file, begin_of_file) :-
     % We don't want to process ourselves, so fail...
     prolog_load_context(module, Module),
-    optimise:module_wants_guard(Module),
+    optimise:module_wants_optimise(Module),
     retractall(optimise:'$program'(_)),
     retractall(optimise:'$participating_clause'(_)).
 user:term_expansion(end_of_file,Terms) :-
     prolog_load_context(module, Module),
-    optimise:module_wants_guard(Module),
+    optimise:module_wants_optimise(Module),
     optimise:transformed_terms(Terms).
 user:term_expansion(Term, No_Clause) :-
     prolog_load_context(module, Module),
-    optimise:module_wants_guard(Module),
+    optimise:module_wants_optimise(Module),
     optimise:reify_reflect(Term,Statement),
     participating_clause(Statement),
     assertz(optimise:'$program'(Statement)),
