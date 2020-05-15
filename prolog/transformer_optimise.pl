@@ -1,11 +1,11 @@
-:- module(optimise, [
+:- module(transformer_optimise, [
               optimise/1,
               optimise_all/0,
               set_optimise_options/1
           ]).
 
-:- use_module(reify).
-:- use_module(equality_optimise).
+:- use_module(transform_reify).
+:- use_module(transform_equality_optimise).
 :- use_module(library(option)).
 
 :- dynamic '$program'/1.
