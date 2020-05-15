@@ -1,11 +1,12 @@
-:- module(transformer_optimise, [
+:- module(optimise, [
               optimise/1,
               optimise_all/0,
+              optimise_everything/0,
               set_optimise_options/1
           ]).
 
-:- use_module(transform_reify).
-:- use_module(transform_equality_optimise).
+:- use_module(reify).
+:- use_module(equality_optimise).
 :- use_module(library(option)).
 
 :- dynamic '$program'/1.
@@ -24,6 +25,12 @@ optimise(Predicate) :-
 optimise_all :-
     assertz('$participating_clause'(_)).
 
+optimise_everything :-
+    check_option(optimise_everything(true)).
+
+module_wants_optimise(_Module) :-
+    optimise_everything,
+    !.
 module_wants_optimise(Module) :-
     Module \= optimise,
     predicate_property(Module:optimise(_), imported_from(optimise)).
