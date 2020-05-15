@@ -91,8 +91,8 @@ user:term_expansion(begin_of_file, begin_of_file) :-
     % We don't want to process ourselves, so fail...
     prolog_load_context(module, Module),
     transformer:module_wants_transformer(Module),
-    * retractall(transformer:'$program'(_)),
-    * retractall(transformer:'$participating_clause'(_)).
+    retractall(transformer:'$program'(_)),
+    retractall(transformer:'$participating_clause'(_)).
 user:term_expansion(end_of_file,Terms) :-
     prolog_load_context(module, Module),
     transformer:module_wants_transformer(Module),
