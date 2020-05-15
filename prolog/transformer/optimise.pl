@@ -2,7 +2,11 @@
               optimise/1,
               optimise_all/0,
               optimise_everything/0,
-              set_optimise_options/1
+              set_optimise_options/1,
+              module_wants_transformer/1,
+              participating_clause/1,
+              '$program'/1,
+              '$participating_clause'/1
           ]).
 
 :- use_module(reify).
@@ -17,7 +21,7 @@
 :- op(920,fy, *).
 *_.
 
-'$options'([equality_cut(true)]).
+'$options'([equality_cut(true), log_stream(current_output)]).
 
 optimise(Predicate) :-
     assertz('$participating_clause'(Predicate)).
@@ -28,12 +32,12 @@ optimise_all :-
 optimise_everything :-
     check_option(optimise_everything(true)).
 
-module_wants_optimise(_Module) :-
+module_wants_transformer(_Module) :-
     optimise_everything,
     !.
-module_wants_optimise(Module) :-
-    Module \= optimise,
-    predicate_property(Module:optimise(_), imported_from(optimise)).
+module_wants_transformer(Module) :-
+    Module \= transformer,
+    predicate_property(Module:optimise(_), imported_from(transformer)).
 
 participating_clause(Clause) :-
     Clause = clause(Pred,_,_),
@@ -55,11 +59,19 @@ get_optimise_options(Options) :-
 
 check_option(Option) :-
     get_optimise_options(Options),
-    member(Option,Options).
+    memberchk(Option,Options).
+
+report_optimisation(Pred) :-
+    check_option(log_stream(Stream)),
+    format(Stream, '~nPerformed optimisation on ~q~n', [Pred]).
 
 optimise_clauses(Clauses, Optimised) :-
     check_option(equality_cut(true)),
-    equality_optimise(Clauses,Optimised).
+    equality_optimise(Clauses,Optimised),
+    (   Clauses = Optimised
+    ->  true
+    ;   Clauses = [clause(Pred,_,_)|_Rest],
+        report_optimisation(Pred)).
 
 transformed_terms(Terms) :-
     get_program(Program),
@@ -70,21 +82,3 @@ transformed_terms(Terms) :-
             ),
             Terms_Sets),
     append(Terms_Sets,Terms).
-
-user:term_expansion(begin_of_file, begin_of_file) :-
-    % We don't want to process ourselves, so fail...
-    prolog_load_context(module, Module),
-    optimise:module_wants_optimise(Module),
-    retractall(optimise:'$program'(_)),
-    retractall(optimise:'$participating_clause'(_)).
-user:term_expansion(end_of_file,Terms) :-
-    prolog_load_context(module, Module),
-    optimise:module_wants_optimise(Module),
-    optimise:transformed_terms(Terms).
-user:term_expansion(Term, No_Clause) :-
-    prolog_load_context(module, Module),
-    optimise:module_wants_optimise(Module),
-    optimise:reify_reflect(Term,Statement),
-    participating_clause(Statement),
-    assertz(optimise:'$program'(Statement)),
-    No_Clause = [].

@@ -22,20 +22,39 @@ p(x,w,z) :- r.
 p(x,y,a) :- s.
 ```
 
-or run it on the whole file: 
+or run it on the whole file:
 
 ```prolog
 :- use_module(library(transformer)).
 :- optimise_all.
 ```
 
+or go wild and let it run on everything!
+
+```prolog
+:- use_module(library(transformer)).
+:- optimise_everything.
+```
+
+# Options
+
+To set options you can run:
+
+```prolog
+:- set_optimise_options(Options)
+```
+Currently the only options are
+
+* `equality_cut(Boolean)` : `Boolean = true` for placing cuts when clauses are disjoint
+* `log_stream(Stream)` for reporting information about transformations.
+
 # TODO
 
 * A "guard" optimiser which does a search for all predicates at the
   beginning of a clause which are in a guard language
   (integer,string,atom,var,nonvar,ground etc.) and places a cut when
-  subsequent clauses are unreachable.
-* Negation elimination. Cuts in previous clauses tell us that in order
+  subsequent clauses are unreachable. Most of the code is already written for this.
+* Negative information propagation. Cuts in previous clauses tell us that in order
   to have cascaded, something before the cut must have been false. i.e
 
 ```prolog
